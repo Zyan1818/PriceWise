@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PriceWise - Smart Grocery Tracker</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <style>
+        .header-bar {
+            display: contents;
+        }
+
+        .menu-toggle {
+            display: none;
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: transparent;
+            color: var(--dark-green);
+            cursor: pointer;
+            position: relative;
+            z-index: 1001;
+        }
+
+        .menu-toggle span {
+            position: absolute;
+            left: 10px;
+            width: 24px;
+            height: 3px;
+            border-radius: 3px;
+            background: currentColor;
+            transition: transform 0.35s ease, opacity 0.25s ease, top 0.35s ease;
+        }
+
+        .menu-toggle span:nth-child(1) { top: 13px; }
+        .menu-toggle span:nth-child(2) { top: 21px; }
+        .menu-toggle span:nth-child(3) { top: 29px; }
+
+        .menu-toggle.open span:nth-child(1) { top: 21px; transform: rotate(45deg); }
+        .menu-toggle.open span:nth-child(2) { opacity: 0; transform: translateX(-10px); }
+        .menu-toggle.open span:nth-child(3) { top: 21px; transform: rotate(-45deg); }
+
+        .navbar a .nav-icon {
+            display: inline-block;
+            margin-right: 6px;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar a:hover .nav-icon {
+            transform: scale(1.25) rotate(-8deg);
+        }
+
+        .home-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: stretch;
+        }
+
+        .home-actions .btn,
+        .home-actions .btn-outline {
+            flex: 1 1 180px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            min-height: 48px;
+            padding: 10px 22px;
+            margin: 0;
+            border-radius: 9px;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.2;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--dark-green);
+            border: 2px solid currentColor;
+            padding: 10px 22px;
+            border-radius: 9px;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .btn-outline:hover {
+            transform: translateY(-2px);
+            opacity: 0.85;
+        }
+
+        .remove-image-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            font-size: 14px;
+            color: #80543a;
+        }
+
+        .modal {
+            border: none;
+            border-radius: 18px;
+            padding: 28px 24px 24px;
+            width: min(92vw, 440px);
+            max-height: 85vh;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            color: #222;
+            background: #fff;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .modal[open] {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .modal::backdrop {
+            background: rgba(0, 0, 0, 0);
+            backdrop-filter: blur(0);
+            transition: background 0.3s ease, backdrop-filter 0.3s ease;
+        }
+
+        .modal[open]::backdrop {
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(3px);
+        }
+
+        .modal h2 {
+            margin: 0 0 14px;
+            font-size: 1.4rem;
+            color: var(--dark-green);
+        }
+
+        .modal ul {
+            list-style: none;
+            margin: 0 0 20px;
+            padding: 0;
+        }
+
+        .modal li {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 10px 0;
+            line-height: 1.4;
+        }
+
+        .modal li .m-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.06);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.25s ease, background 0.2s ease;
+        }
+
+        .modal-close:hover {
+            transform: rotate(90deg);
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        .modal .btn {
+            width: 100%;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                position: sticky;
+                top: 0;
+                display: block;
+                padding: 10px 5%;
+            }
+
+            .header .header-bar {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+            }
+
+            .header .logo {
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .header .menu-toggle {
+                display: block;
+                margin-left: auto;
+                flex-shrink: 0;
+            }
+
+            .navbar {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                flex-wrap: nowrap;
+                gap: 0;
+                background: #fff;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+                overflow: hidden;
+                max-height: 0;
+                opacity: 0;
+                visibility: hidden;
+                transition: max-height 0.45s ease, opacity 0.35s ease, visibility 0.35s;
+            }
+
+            .navbar.open {
+                max-height: 400px;
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .navbar a {
+                margin: 0;
+                padding: 16px 24px;
+                font-size: 15px;
+                border-radius: 0;
+                opacity: 0;
+                transform: translateX(-20px);
+                transition: opacity 0.35s ease, transform 0.35s ease, background 0.2s ease;
+            }
+
+            .navbar.open a {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            .navbar.open a:nth-child(1) { transition-delay: 0.05s; }
+            .navbar.open a:nth-child(2) { transition-delay: 0.1s; }
+            .navbar.open a:nth-child(3) { transition-delay: 0.15s; }
+            .navbar.open a:nth-child(4) { transition-delay: 0.2s; }
+            .navbar.open a:nth-child(5) { transition-delay: 0.25s; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-bar">
+            <a href="#home" class="logo">PriceWise<span>.</span></a>
+
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navbar">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <nav class="navbar" id="navbar">
+            <a href="#home"><span class="nav-icon">🏠</span>Home</a>
+            <a href="#compare"><span class="nav-icon">⚖️</span>Compare Prices</a>
+            <a href="#budget"><span class="nav-icon">💰</span>Budget</a>
+            <a href="#expenses"><span class="nav-icon">🧾</span>Expenses</a>
+            <a href="#shopping"><span class="nav-icon">🛍️</span>Shopping List</a>
+        </nav>
+    </header>
+
+    <!-- Home Section -->
+    <section class="home" id="home">
+
+        <div class="home-content">
+            <h3>👋 WELCOME TO PRICEWISE</h3>
+            <h1>Shop Smarter.<br><span>Save Every Peso.</span></h1>
+
+            <p>
+                Compare grocery prices, manage your expenses,
+                and plan your shopping budget with ease.
+            </p>
+            <div class="home-actions">
+                <a href="#compare" class="btn">🔍 Start Comparing</a>
+                <button type="button" class="btn-outline" id="openInfo">ℹ️ How it works</button>
+            </div>
+
+            <div class="stats">
+                <div>
+                    <h3 id="homeBudget">₱0.00</h3>
+                    <p>💼 Your Budget</p>
+                </div>
+
+                <div>
+                    <h3 id="homeSpent">₱0.00</h3>
+                    <p>💸 Total Expenses</p>
+                </div>
+
+                <div>
+                    <h3 id="homeSavings">₱0.00</h3>
+                    <p>🎯 Potential Savings</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-card">
+            <div class="cart-icon">🛒</div>
+            <h2>Your Grocery Companion</h2>
+            <p>Compare, plan, and save on your everyday purchases.</p>
+        </div>
+
+    </section>
+
+    <!-- Compare Prices Section -->
+    <section class="section" id="compare">
+
+        <div class="section-title">
+            <h2>⚖️ Compare Grocery Prices</h2>
+            <p>Find the more affordable option before buying.</p>
+        </div>
+
+        <div class="container">
+
+            <div class="card">
+                <h3>🛒 Add Grocery Product</h3>
+
+                <label for="productImage" class="upload-area">
+                    <span>📷</span>
+                    <strong>Upload or Capture Product Image</strong>
+                    <small>Tap here to select a photo</small>
+                </label>
+
+                <input type="file" id="productImage"
+                    accept="image/*" capture="environment">
+
+                <div id="imageContainer" hidden>
+                    <img id="imagePreview" alt="Product Preview">
+                    <button type="button" class="btn-outline remove-image-btn" id="removeImageBtn">🗑️ Remove Photo</button>
+                </div>
+
+                <div class="input-group">
+                    <label>📦 Product Name</label>
+                    <input type="text" id="productName"
+                        placeholder="Example: Rice">
+                </div>
+
+                <div class="input-group">
+                    <label>🏪 Store 1</label>
+                    <input type="text" id="storeOne"
+                        placeholder="Store A">
+                </div>
+
+                <div class="input-group">
+                    <label>🏷️ Price (₱)</label>
+                    <input type="number" id="priceOne"
+                        placeholder="Enter price" min="0" step="0.01">
+                </div>
+
+                <div class="input-group">
+                    <label>🏬 Store 2</label>
+                    <input type="text" id="storeTwo"
+                        placeholder="Store B">
+                </div>
+
+                <div class="input-group">
+                    <label>🏷️ Price (₱)</label>
+                    <input type="number" id="priceTwo"
+                        placeholder="Enter price" min="0" step="0.01">
+                </div>
+
+                <button class="btn" id="compareBtn">
+                    ⚖️ Compare Prices
+                </button>
+
+                <p id="compareMessage" class="message"></p>
+            </div>
+
+            <div class="card">
+                <h3>📊 Price Comparison Results</h3>
+
+                <div id="comparisonResults">
+                    <p class="empty">Your comparison results will appear here.</p>
+                </div>
+
+                <h3 class="saved-title">💾 Saved Products</h3>
+                <div id="savedComparisons"></div>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- Budget Section -->
+    <section class="section alternate" id="budget">
+
+        <div class="section-title">
+            <h2>💰 Budget Planner</h2>
+            <p>Set your grocery budget and monitor your spending.</p>
+        </div>
+
+        <div class="card budget-card">
+
+            <div class="input-group">
+                <label>💼 Enter Your Grocery Budget (₱)</label>
+                <input type="number" id="budgetAmount"
+                    placeholder="Example: 3000" min="0">
+            </div>
+
+            <button class="btn" id="saveBudgetBtn">
+                💾 Save Budget
+            </button>
+
+            <div class="budget-info">
+                <div>
+                    <p>Total Budget</p>
+                    <h3 id="budgetDisplay">₱0.00</h3>
+                </div>
+
+                <div>
+                    <p>Total Spent</p>
+                    <h3 id="budgetSpent">₱0.00</h3>
+                </div>
+
+                <div>
+                    <p>Remaining</p>
+                    <h3 id="budgetRemaining">₱0.00</h3>
+                </div>
+            </div>
+
+            <div class="progress-track">
+                <div id="budgetProgress"></div>
+            </div>
+
+            <p id="budgetMessage" class="message">
+                Set your budget to start tracking.
+            </p>
+
+        </div>
+
+    </section>
+
+    <!-- Expenses Section -->
+    <section class="section" id="expenses">
+
+        <div class="section-title">
+            <h2>🧾 Expense Tracker</h2>
+            <p>Record your grocery purchases and expenses.</p>
+        </div>
+
+        <div class="card">
+
+            <div class="input-group">
+                <label>📝 Expense Name</label>
+                <input type="text" id="expenseName"
+                    placeholder="Example: Vegetables">
+            </div>
+
+            <div class="input-group">
+                <label>💵 Amount (₱)</label>
+                <input type="number" id="expenseAmount"
+                    placeholder="Enter amount" min="0">
+            </div>
+
+            <button class="btn" id="addExpenseBtn">
+                ➕ Add Expense
+            </button>
+
+            <div class="expense-total">
+                <p>Total Expenses</p>
+                <h2 id="totalExpenses">₱0.00</h2>
+            </div>
+
+            <ul id="expenseList" class="item-list"></ul>
+
+            <p id="expenseEmpty" class="empty">
+                No expenses recorded yet.
+            </p>
+
+        </div>
+
+    </section>
+
+    <!-- Shopping List Section -->
+    <section class="section alternate" id="shopping">
+
+        <div class="section-title">
+            <h2>🛍️ My Shopping List</h2>
+            <p>Organize the grocery items you need to buy.</p>
+        </div>
+
+        <div class="card">
+
+            <div class="input-group">
+                <label>🥚 Grocery Item</label>
+                <input type="text" id="shoppingItem"
+                    placeholder="Example: Eggs">
+            </div>
+
+            <div class="input-group">
+                <label>🔢 Quantity</label>
+                <input type="number" id="shoppingQuantity"
+                    value="1" min="1">
+            </div>
+
+            <button class="btn" id="addShoppingBtn">
+                ➕ Add to Shopping List
+            </button>
+
+            <ul id="shoppingList" class="item-list"></ul>
+
+            <p id="shoppingEmpty" class="empty">
+                Your shopping list is empty.
+            </p>
+
+        </div>
+
+    </section>
+
+    <!-- Footer Section -->
+    <footer class="footer">
+        <h2>PriceWise.</h2>
+        <p>Smart Grocery Price Comparison & Budget Tracker</p>
+        <p>© 2026 PriceWise | All Rights Reserved</p>
+        <small>⚠️ Prices are manually entered and are not live store prices.</small>
+    </footer>
+
+    <dialog class="modal" id="infoModal" aria-labelledby="infoTitle">
+        <button type="button" class="modal-close" id="closeInfo" aria-label="Close dialog">✕</button>
+        <h2 id="infoTitle">ℹ️ How PriceWise works</h2>
+        <ul>
+            <li><span class="m-icon">⚖️</span><span>Enter two stores and their prices to see which one is cheaper.</span></li>
+            <li><span class="m-icon">💰</span><span>Set your grocery budget and watch your remaining balance.</span></li>
+            <li><span class="m-icon">🧾</span><span>Record every purchase in the expense tracker.</span></li>
+            <li><span class="m-icon">🛍️</span><span>Keep a shopping list so you never forget an item.</span></li>
+        </ul>
+        <button type="button" class="btn" id="confirmInfo">👍 Got it</button>
+    </dialog>
+
+    <script src="../scripts/script.js"></script>
+    <script>
+        (function () {
+            var toggle = document.getElementById('menuToggle');
+            var nav = document.getElementById('navbar');
+
+            function setMenu(open) {
+                toggle.classList.toggle('open', open);
+                nav.classList.toggle('open', open);
+                toggle.setAttribute('aria-expanded', open);
+            }
+
+            toggle.addEventListener('click', function () {
+                setMenu(!nav.classList.contains('open'));
+            });
+
+            nav.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', function () {
+                    setMenu(false);
+                });
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!nav.contains(e.target) && !toggle.contains(e.target)) {
+                    setMenu(false);
+                }
+            });
+
+            document.getElementById('removeImageBtn').addEventListener('click', function () {
+                document.getElementById('productImage').value = '';
+                document.getElementById('imagePreview').removeAttribute('src');
+                document.getElementById('imageContainer').hidden = true;
+            });
+
+            var modal = document.getElementById('infoModal');
+
+            function closeModal() {
+                modal.close();
+            }
+
+            document.getElementById('openInfo').addEventListener('click', function () {
+                modal.showModal();
+            });
+            document.getElementById('closeInfo').addEventListener('click', closeModal);
+            document.getElementById('confirmInfo').addEventListener('click', closeModal);
+
+            modal.addEventListener('click', function (e) {
+                var r = modal.getBoundingClientRect();
+                var inside = e.clientX >= r.left && e.clientX <= r.right &&
+                    e.clientY >= r.top && e.clientY <= r.bottom;
+                if (!inside) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
+
+</body>
+</html>
